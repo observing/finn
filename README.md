@@ -15,7 +15,8 @@
 
 Finn is the CSS pre-process that [rework] should have been. It provides an
 alternate and extendible interface for processing CSS and allows you to to add
-plugins which apply to all files instead of one.
+plugins which apply to all files instead of one. **Finn is compatible with all
+`rework` based plugins.**
 
 ## Installation
 
@@ -37,6 +38,42 @@ var Finn = require('finn')
 // or
 
 var finn = require('finn')();
+```
+
+### finn.render
+
+The render method compiles your supplied CSS string and transforms it your newly
+generated CSS file. It accepts 3 arguments:
+
+1. `css`, The CSS string that you want to have compiled.
+2. `options`, These options are directly passed in to the `css.parse` and
+   `css.stringify` module that we use internally. The following options are
+   accepted by these functions:
+   - **silent**: silently fail on parse errors.
+   - **source**: the path to the file containing `css`. Makes errors and source
+     maps more helpful, by letting them know where code comes from.
+  - **compress**: omit comments and extraneous whitespace.
+  - **sourcemap**: return a sourcemap along with the CSS output. Using the `source`
+    option of `css.parse` is strongly recommended when creating a source map.
+    Specify `sourcemap: 'generator'` to return the SourceMapGenerator object
+    instead of serializing the source map.
+  - **inputSourcemaps**: (enabled by default, specify `false` to disable) reads
+    any source maps referenced by the input files when generating the output
+    source map. When enabled, file system access may be required for reading the
+    referenced source maps.
+
+```js
+var pluginA = ;
+var pluginB = 
+
+finn.use('a', require('pluginA'))
+    .use('b', require('pluginB'));
+
+finn.render('body { font-size: 12px; }', { 
+  source: 'source.css'
+}, function rendered(err, css) {
+
+});
 ```
 
 ### finn.use
@@ -110,8 +147,6 @@ forcefully be overridden.
 ```js
 finn.before('xxx', function yyy() {});
 ```
-
-### finn.render
 
 ### finn.sourcemap
 
