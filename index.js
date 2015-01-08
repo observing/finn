@@ -10,6 +10,8 @@ var Supply = require('supply')
  * @api public
  */
 var Finn = Supply.extend({
+  constructor: Supply,
+
   /**
    * Compile the CSS from a string.
    *
