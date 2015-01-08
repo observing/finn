@@ -20,14 +20,14 @@ var Finn = Supply.extend({
    * @param {Function} fn Completion callback.
    * @api public
    */
-  css: function css(sheet, options, fn) {
+  render: function render(css, options, fn) {
     if ('function' === typeof options) {
       fn = options;
       options = {};
     }
 
     var finn = this
-      , ast = finn.parse(sheet);
+      , ast = finn.parse(css);
 
     finn.each(ast.stylesheet, finn, function transformed(err) {
       if (err) return fn(err);
