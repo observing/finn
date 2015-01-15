@@ -1,6 +1,7 @@
 'use strict';
 
 var destroy = require('demolish')
+  , dollars = require('dollars')
   , Supply = require('supply')
   , css = require('css');
 
@@ -49,13 +50,32 @@ var Finn = Supply.extend({
     }
 
     var data = { css: css }
-      , finn = this
-      , ast;
+      , finn = this;
 
-    finn.pre.each(data, finn, function pre(err) {
+    /**
+     * Run the `after` hooks when everything is done.
+     *
+     * @param {Error} err Optional error.
+     * @param {Object} data Data to process.
+     * @api private
+     */
+    function after(err, data) {
       if (err) return fn(err);
 
-      ast = finn.parse(data.css);
+      finn.post.each(data, finn, function afterall(err) {
+        fn(err, data);
+      });
+    }
+
+    /**
+     * Iterate over the middleware layers after pre-processing all the things.
+     *
+     * @param {Error} err Optional error.
+     * @param {Object} ast Result of the parsed CSS.
+     * @api private
+     */
+    function each(err, ast) {
+      if (err) return fn(err);
 
       finn.each(ast.stylesheet, finn, function transformed(err) {
         if (err) return fn(err);
@@ -70,25 +90,26 @@ var Finn = Supply.extend({
           data.css = result;
         }
 
-        /**
-         * Run the `after` hooks when everything is done.
-         *
-         * @param {Error} err Optional error.
-         * @param {Object} data Data to process.
-         * @api private
-         */
-        function after(err, data) {
-          finn.post.each(data, finn, function afterall(err) {
-            fn(err, data);
-          });
-        }
-
         if (options.sourcemap) return finn.sourcemap(data, after);
         else after(err, data);
       });
-    });
+    }
 
-    return finn;
+    /**
+     * Parse the pre-processed CSS.
+     *
+     * @param {Error} err Optional err.
+     * @api private
+     */
+    function parse(err) {
+      if (err) return fn(err);
+
+      dollars.catch(function trys() {
+        return finn.parse(data.css);
+      }, each);
+    }
+
+    return finn.pre.each(data, finn, parse);
   },
 
   /**

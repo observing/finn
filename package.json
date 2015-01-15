@@ -42,6 +42,7 @@
     "convert-source-map": "0.4.x",
     "css": "2.1.x",
     "demolish": "1.0.x",
+    "dollars": "0.0.x",
     "supply": "0.0.x"
   }
 }

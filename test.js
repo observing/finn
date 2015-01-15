@@ -69,5 +69,50 @@ describe('Finn', function () {
         next();
       });
     });
+
+    it('can add pre-processing', function (next) {
+      next = assume.plan(5, next);
+
+      finn
+      .pre.use(function (data) {
+        assume(data.css).equals('bar');
+        data.css = 'foo';
+      })
+      .pre.use(function (data) {
+        assume(data.css).equals('foo');
+        data.css = css;
+      });
+
+      finn.render('bar', function (err, data) {
+        if (err) return next(err);
+
+        assume(data).is.a('object');
+        assume(data.css).is.a('string');
+        assume(data.css).contains('.foo');
+
+        next();
+      });
+    });
+
+    it('can add pos-processing', function (next) {
+      next = assume.plan(4, next);
+
+      finn
+      .post.use(function (data) {
+        assume(data.css).contains('.foo');
+        data.css = 'foo';
+        data.bar = 'bar';
+      });
+
+      finn.render(css, function (err, data) {
+        if (err) return next(err);
+
+        assume(data).is.a('object');
+        assume(data.css).equals('foo');
+        assume(data.bar).equals('bar');
+
+        next();
+      });
+    });
   });
 });
