@@ -40,6 +40,11 @@ var Finn = require('finn')
 var finn = require('finn')();
 ```
 
+One thing worth noting that `finn` is build-upon [supply][supply] for all the
+middleware handling so you can use all the methods and functionality from that
+module directly with Finn. But we've also documented the most important methods
+here: 
+
 ### finn.render
 
 The render method compiles your supplied CSS string and transforms it your newly
@@ -53,9 +58,9 @@ generated CSS file. It accepts 3 arguments:
    - **source**: the path to the file containing `css`. Makes errors and source
      maps more helpful, by letting them know where code comes from.
   - **compress**: omit comments and extraneous whitespace.
-  - **sourcemap**: return a sourcemap along with the CSS output. Using the `source`
-    option of `css.parse` is strongly recommended when creating a source map.
-    Specify `sourcemap: 'generator'` to return the SourceMapGenerator object
+  - **sourcemap**: return a source-map along with the CSS output. Using the
+    `source` option of `css.parse` is strongly recommended when creating a source
+    map. Specify `sourcemap: 'generator'` to return the SourceMapGenerator object
     instead of serializing the source map.
   - **inputSourcemaps**: (enabled by default, specify `false` to disable) reads
     any source maps referenced by the input files when generating the output
@@ -63,9 +68,6 @@ generated CSS file. It accepts 3 arguments:
     referenced source maps.
 
 ```js
-var pluginA = ;
-var pluginB = 
-
 finn.use('a', require('pluginA'))
     .use('b', require('pluginB'));
 
@@ -126,6 +128,47 @@ supply.use(function example(ast) {
 Error handling also build in. The async middleware layers can just call the
 supplied callback with an error as first argument while the sync layers can just
 throw errors as they are wrapped in a `try {} catch (e) {}` statement.
+
+### finn.pre
+
+Pre-process the given CSS string before we're going to process it with a bunch
+middleware layers. This can be useful if you want to compile your CSS from a non
+valid CSS like structure to something valid like SASS's significant whitespace
+etc. The `post` property is just another [supply][supply] instance so we can the
+hooks using the `.use` method. The use method receives 2 arguments:
+
+1. An object which contains a `css` property with the string.
+2. A reference to your `finn` instance.
+
+```js
+finn.post.use(function (data) {
+  data.css = require('css-whitespace')(data.css);
+});
+
+finn.render(css, function render(err, data) {
+  console.log(data.css); // your css is now compiled, \o\
+});
+```
+
+### finn.post
+
+Post-process the compiled CSS. The `post` property is just another
+[supply][supply] instance so we can the hooks using the `.use` method. The use
+method receives 2 arguments:
+
+1. An object which contains the `css` and `map` (optionally) so it can be
+   transformed in many different ways.
+2. A reference to your `finn` instance.
+
+```js
+finn.post.use(function (data) {
+  data.css = UGLIFYMYCSS(data.css);
+});
+
+finn.render(css, function render(err, data) {
+  console.log(data.css); // your css is now compiled, \o\
+});
+```
 
 ### finn.remove
 
@@ -218,3 +261,4 @@ var jake = Finn.extend({
 MIT
 
 [rework]: https://github.com/reworkcss/rework
+[supply]: https://github.com/bigpipe/supply
