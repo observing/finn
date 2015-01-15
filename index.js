@@ -1,6 +1,7 @@
 'use strict';
 
-var Supply = require('supply')
+var destroy = require('demolish')
+  , Supply = require('supply')
   , css = require('css');
 
 /**
@@ -10,7 +11,28 @@ var Supply = require('supply')
  * @api public
  */
 var Finn = Supply.extend({
-  constructor: Supply,
+  constructor: function constr(context, options) {
+    if (!this) return new Finn(context, options);
+
+    //
+    // Initialize supply.
+    //
+    Supply.prototype.constructor.apply(this, arguments);
+  },
+
+  /**
+   * Initialize the Supply instance and add extra before and after hooks which
+   * will:
+   *
+   * - pre: Before we pass the string in to the parser.
+   * - post: After we've received a new string.
+   *
+   * @api private
+   */
+  initialize: function initialize() {
+    this.post = new Supply(this);
+    this.pre = new Supply(this);
+  },
 
   /**
    * Compile the CSS from a string.
@@ -26,16 +48,44 @@ var Finn = Supply.extend({
       options = {};
     }
 
-    var finn = this
-      , ast = finn.parse(css);
+    var data = { css: css }
+      , finn = this
+      , ast;
 
-    finn.each(ast.stylesheet, finn, function transformed(err) {
+    finn.pre.each(data, finn, function pre(err) {
       if (err) return fn(err);
 
-      var data = finn.stringify(ast, options);
+      ast = finn.parse(data.css);
 
-      if (options.sourcemap) return finn.sourcemap(data, fn);
-      else fn(err, data);
+      finn.each(ast.stylesheet, finn, function transformed(err) {
+        if (err) return fn(err);
+
+        var result = finn.stringify(ast, options);
+        data = {};
+
+        if ('string' !== typeof result) {
+          data.css = result.code;
+          data.map = result.map;
+        } else {
+          data.css = result;
+        }
+
+        /**
+         * Run the `after` hooks when everything is done.
+         *
+         * @param {Error} err Optional error.
+         * @param {Object} data Data to process.
+         * @api private
+         */
+        function after(err, data) {
+          finn.post.each(data, finn, function afterall(err) {
+            fn(err, data);
+          });
+        }
+
+        if (options.sourcemap) return finn.sourcemap(data, after);
+        else after(err, data);
+      });
     });
 
     return finn;
@@ -51,9 +101,18 @@ var Finn = Supply.extend({
   sourcemap: function sourcemap(data, fn) {
     var content = this.transform.fromObject(data.map).toBase64();
 
-    data.code += '\n/*# sourceMappingURL=data:application/json;base64,'+ content +' */';
+    data.css += '\n/*# sourceMappingURL=data:application/json;base64,'+ content +' */';
     fn(undefined, data);
   },
+
+  /**
+   * Completely destroy the Finn instance and release all references.
+   *
+   * @type {Function}
+   * @returns {Boolean}
+   * @api public
+   */
+  destroy: destroy('layers, providers, pre, post'),
 
   /**
    * Expose the CSS parsers and source map utilities on the prototype so it can

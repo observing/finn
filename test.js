@@ -32,7 +32,9 @@ describe('Finn', function () {
       finn.render(css, function (err, data) {
         if (err) return next(err);
 
-        assume(data).is.a('string');
+        assume(data).is.a('object');
+        assume(data.css).is.a('string');
+
         next();
       });
     });
@@ -45,8 +47,8 @@ describe('Finn', function () {
         if (err) return next(err);
 
         assume(data).is.a('object');
-        assume(data.code).is.a('string');
-        assume(data.code).includes('sourceMappingURL');
+        assume(data.css).is.a('string');
+        assume(data.css).includes('sourceMappingURL');
         assume(data.map).is.a('object');
 
         next();
