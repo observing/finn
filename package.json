@@ -33,14 +33,14 @@
   },
   "homepage": "https://github.com/observing/finn",
   "devDependencies": {
-    "assume": "0.0.x",
-    "istanbul": "0.3.x",
-    "mocha": "2.1.x",
-    "pre-commit": "0.0.x"
+    "assume": "~1.4.1",
+    "istanbul": "~0.4.5",
+    "mocha": "~3.1.2",
+    "pre-commit": "~1.1.3"
   },
   "dependencies": {
-    "convert-source-map": "0.4.x",
-    "css": "2.1.x",
+    "convert-source-map": "~1.3.0",
+    "css": "~2.2.1",
     "demolish": "1.0.x",
     "dollars": "0.0.x",
     "supply": "0.0.x"
